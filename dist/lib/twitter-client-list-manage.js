@@ -4,6 +4,28 @@
 import { TWITTER_API_BASE } from './twitter-client-constants.js';
 import { buildListsFeatures } from './twitter-client-features.js';
 
+/**
+ * Minimal feature flags required by list mutation/query endpoints.
+ * Using the full buildListsFeatures() can cause DecodeException.
+ */
+function buildListMutationFeatures() {
+    return {
+        profile_label_improvements_pcf_label_in_post_enabled: true,
+        responsive_web_profile_redirect_enabled: true,
+        rweb_tipjar_consumption_enabled: true,
+        verified_phone_label_enabled: false,
+        responsive_web_graphql_skip_user_profile_image_extensions_enabled: false,
+        responsive_web_graphql_timeline_navigation_enabled: true,
+    };
+}
+
+function buildListMutationFieldToggles() {
+    return {
+        withPayments: false,
+        withAuxiliaryUserLabels: false,
+    };
+}
+
 export function withListManage(Base) {
     class TwitterClientListManage extends Base {
 
@@ -20,9 +42,9 @@ export function withListManage(Base) {
                 return { success: true, response };
             }
 
-            // Read body to check for DecodeException
+            // Only check for DecodeException on non-OK responses
             const text = await response.text();
-            if (text.includes('DecodeException')) {
+            if (response.status === 400 && text.includes('DecodeException')) {
                 console.warn('DecodeException detected. Retrying with fallback headers...');
                 // Build fallback headers — tweak User-Agent so the server treats it as a fresh request
                 const fallbackHeaders = { ...primaryHeaders };
@@ -43,6 +65,27 @@ export function withListManage(Base) {
             super(...args);
         }
 
+        async getCreateListQueryIds() {
+            const primary = await this.getQueryId('CreateList');
+            return Array.from(new Set([primary, 'CzrvV0ePRFW1dPgLY6an7g'])).filter(Boolean);
+        }
+        async getDeleteListQueryIds() {
+            const primary = await this.getQueryId('DeleteList');
+            return Array.from(new Set([primary, 'UnN9Th1BDbeLjpgjGSpL3Q'])).filter(Boolean);
+        }
+        async getListAddMemberQueryIds() {
+            const primary = await this.getQueryId('ListAddMember');
+            return Array.from(new Set([primary, 'EadD8ivrhZhYQr2pDmCpjA'])).filter(Boolean);
+        }
+        async getListRemoveMemberQueryIds() {
+            const primary = await this.getQueryId('ListRemoveMember');
+            return Array.from(new Set([primary, 'B5tMzrMYuFHJex_4EXFTSw'])).filter(Boolean);
+        }
+        async getListMembersQueryIds() {
+            const primary = await this.getQueryId('ListMembers');
+            return Array.from(new Set([primary, '7FPk01hdc1jyzL6Gj8vMZw'])).filter(Boolean);
+        }
+
         /**
          * Create a new Twitter list
          */
@@ -50,30 +93,31 @@ export function withListManage(Base) {
             await this.ensureClientUserId();
 
             const variables = { isPrivate, name, description };
-            const queryIds = ['CzrvV0ePRFW1dPgLY6an7g'];
+            const queryIds = await this.getCreateListQueryIds();
 
             let lastError;
             for (const queryId of queryIds) {
                 const url = `${TWITTER_API_BASE}/${queryId}/CreateList`;
                 try {
-                    const fetchFn = async (headers) => await this.fetchWithTimeout(url, {
+                    const response = await this.fetchWithTimeout(url, {
                         method: 'POST',
-                        headers,
+                        headers: this.getHeaders(),
                         body: JSON.stringify({
                             variables,
                             features: buildListsFeatures(),
+                            fieldToggles: buildListMutationFieldToggles(),
                             queryId,
                         }),
                     });
 
-                    const result = await this.retryWithFallbackHeaders(fetchFn);
-                    if (!result.success) {
-                        lastError = result.error;
+                    if (!response.ok) {
+                        const text = await response.text();
+                        lastError = `HTTP ${response.status}: ${text.slice(0, 200)}`;
                         continue;
                     }
 
-                    const data = await result.response.json();
-                    if (data.errors && data.errors.length > 0) {
+                    const data = await response.json();
+                    if (data.errors && data.errors.length > 0 && !data.data) {
                         lastError = data.errors.map((e) => e.message).join(', ');
                         continue;
                     }
@@ -122,26 +166,26 @@ export function withListManage(Base) {
             await this.ensureClientUserId();
 
             const variables = { listId };
-            const queryIds = ['UnN9Th1BDbeLjpgjGSpL3Q'];
+            const queryIds = await this.getDeleteListQueryIds();
 
             let lastError;
             for (const queryId of queryIds) {
                 const url = `${TWITTER_API_BASE}/${queryId}/DeleteList`;
                 try {
-                    const fetchFn = async (headers) => await this.fetchWithTimeout(url, {
+                    const response = await this.fetchWithTimeout(url, {
                         method: 'POST',
-                        headers,
-                        body: JSON.stringify({ variables, queryId }),
+                        headers: this.getHeaders(),
+                        body: JSON.stringify({ variables, fieldToggles: buildListMutationFieldToggles(), queryId }),
                     });
 
-                    const result = await this.retryWithFallbackHeaders(fetchFn);
-                    if (!result.success) {
-                        lastError = result.error;
+                    if (!response.ok) {
+                        const text = await response.text();
+                        lastError = `HTTP ${response.status}: ${text.slice(0, 200)}`;
                         continue;
                     }
 
-                    const data = await result.response.json();
-                    if (data.errors && data.errors.length > 0) {
+                    const data = await response.json();
+                    if (data.errors && data.errors.length > 0 && !data.data) {
                         lastError = data.errors.map((e) => e.message).join(', ');
                         continue;
                     }
@@ -161,30 +205,33 @@ export function withListManage(Base) {
             await this.ensureClientUserId();
 
             const variables = { listId, userId };
-            const queryIds = ['EadD8ivrhZhYQr2pDmCpjA'];
+            const queryIds = await this.getListAddMemberQueryIds();
 
             let lastError;
             for (const queryId of queryIds) {
                 const url = `${TWITTER_API_BASE}/${queryId}/ListAddMember`;
                 try {
-                    const fetchFn = async (headers) => await this.fetchWithTimeout(url, {
+                    const response = await this.fetchWithTimeout(url, {
                         method: 'POST',
-                        headers,
+                        headers: this.getHeaders(),
                         body: JSON.stringify({
                             variables,
                             features: buildListsFeatures(),
+                            fieldToggles: buildListMutationFieldToggles(),
                             queryId,
                         }),
                     });
 
-                    const result = await this.retryWithFallbackHeaders(fetchFn);
-                    if (!result.success) {
-                        lastError = result.error;
+                    if (!response.ok) {
+                        const text = await response.text();
+                        lastError = `HTTP ${response.status}: ${text.slice(0, 200)}`;
                         continue;
                     }
 
-                    const data = await result.response.json();
-                    if (data.errors && data.errors.length > 0) {
+                    const data = await response.json();
+                    // X sometimes returns both data and errors (partial success with non-critical errors)
+                    // Only fail if there are errors but NO data
+                    if (data.errors && data.errors.length > 0 && !data.data) {
                         lastError = data.errors.map((e) => e.message).join(', ');
                         continue;
                     }
@@ -204,30 +251,31 @@ export function withListManage(Base) {
             await this.ensureClientUserId();
 
             const variables = { listId, userId };
-            const queryIds = ['B5tMzrMYuFHJex_4EXFTSw'];
+            const queryIds = await this.getListRemoveMemberQueryIds();
 
             let lastError;
             for (const queryId of queryIds) {
                 const url = `${TWITTER_API_BASE}/${queryId}/ListRemoveMember`;
                 try {
-                    const fetchFn = async (headers) => await this.fetchWithTimeout(url, {
+                    const response = await this.fetchWithTimeout(url, {
                         method: 'POST',
-                        headers,
+                        headers: this.getHeaders(),
                         body: JSON.stringify({
                             variables,
                             features: buildListsFeatures(),
+                            fieldToggles: buildListMutationFieldToggles(),
                             queryId,
                         }),
                     });
 
-                    const result = await this.retryWithFallbackHeaders(fetchFn);
-                    if (!result.success) {
-                        lastError = result.error;
+                    if (!response.ok) {
+                        const text = await response.text();
+                        lastError = `HTTP ${response.status}: ${text.slice(0, 200)}`;
                         continue;
                     }
 
-                    const data = await result.response.json();
-                    if (data.errors && data.errors.length > 0) {
+                    const data = await response.json();
+                    if (data.errors && data.errors.length > 0 && !data.data) {
                         lastError = data.errors.map((e) => e.message).join(', ');
                         continue;
                     }
@@ -255,25 +303,25 @@ export function withListManage(Base) {
                 features: JSON.stringify(features),
             });
 
-            const queryIds = ['7FPk01hdc1jyzL6Gj8vMZw'];
+            const queryIds = await this.getListMembersQueryIds();
 
             let lastError;
             for (const queryId of queryIds) {
                 const url = `${TWITTER_API_BASE}/${queryId}/ListMembers?${params.toString()}`;
                 try {
-                    const fetchFn = async (headers) => await this.fetchWithTimeout(url, {
+                    const response = await this.fetchWithTimeout(url, {
                         method: 'GET',
-                        headers,
+                        headers: this.getHeaders(),
                     });
 
-                    const result = await this.retryWithFallbackHeaders(fetchFn);
-                    if (!result.success) {
-                        lastError = result.error;
+                    if (!response.ok) {
+                        const text = await response.text();
+                        lastError = `HTTP ${response.status}: ${text.slice(0, 200)}`;
                         continue;
                     }
 
-                    const data = await result.response.json();
-                    if (data.errors && data.errors.length > 0) {
+                    const data = await response.json();
+                    if (data.errors && data.errors.length > 0 && !data.data) {
                         lastError = data.errors.map((e) => e.message).join(', ');
                         continue;
                     }
@@ -291,14 +339,16 @@ export function withListManage(Base) {
                                         continue;
                                     }
                                     const userResult = entry.content?.itemContent?.user_results?.result;
-                                    if (userResult?.legacy) {
+                                    if (userResult) {
+                                        const legacy = userResult.legacy || {};
+                                        const core = userResult.core || {};
                                         members.push({
                                             id: userResult.rest_id,
-                                            username: userResult.legacy.screen_name,
-                                            name: userResult.legacy.name,
-                                            description: userResult.legacy.description || '',
-                                            followersCount: userResult.legacy.followers_count,
-                                            followingCount: userResult.legacy.friends_count,
+                                            username: core.screen_name || legacy.screen_name,
+                                            name: core.name || legacy.name,
+                                            description: legacy.description || core.description || '',
+                                            followersCount: legacy.followers_count ?? core.followers_count,
+                                            followingCount: legacy.friends_count ?? core.friends_count,
                                             isVerified: userResult.is_blue_verified || false,
                                         });
                                     }
