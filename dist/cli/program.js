@@ -5,6 +5,7 @@ import { registerFollowCommands } from '../commands/follow.js';
 import { registerHelpCommand } from '../commands/help.js';
 import { registerHomeCommand } from '../commands/home.js';
 import { registerListsCommand } from '../commands/lists.js';
+import { registerListManageCommands } from '../commands/list-manage.js';
 import { registerNewsCommand } from '../commands/news.js';
 import { registerPostCommands } from '../commands/post.js';
 import { registerQueryIdsCommand } from '../commands/query-ids.js';
@@ -33,6 +34,11 @@ export const KNOWN_COMMANDS = new Set([
     'likes',
     'lists',
     'list-timeline',
+    'list-create',
+    'list-delete',
+    'list-add',
+    'list-remove',
+    'list-members',
     'home',
     'user-tweets',
     'news',
@@ -103,6 +109,7 @@ export function createProgram(ctx) {
     registerUnbookmarkCommand(program, ctx);
     registerFollowCommands(program, ctx);
     registerListsCommand(program, ctx);
+    registerListManageCommands(program, ctx);
     registerHomeCommand(program, ctx);
     registerUserCommands(program, ctx);
     registerUserTweetsCommand(program, ctx);
