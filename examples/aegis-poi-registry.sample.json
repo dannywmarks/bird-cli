@@ -1,0 +1,140 @@
+{
+  "schema_version": "aegis.poi_registry.v1",
+  "registry_id": "sample-registry",
+  "generated_at": "2026-10-07T00:00:00Z",
+  "generated_by": "dalton",
+  "source_system": "manual_sample",
+  "records": [
+    {
+      "schema_version": "aegis.poi.v1",
+      "poi_id": "poi_sample_x_actor_001",
+      "external_ids": {},
+      "record_status": "active",
+      "lifecycle_status": "active_monitoring",
+      "created_at": "2026-10-07T00:00:00Z",
+      "updated_at": "2026-10-07T00:00:00Z",
+      "created_by": "analyst",
+      "updated_by": "analyst",
+      "principals": [
+        {
+          "principal_id": "principal_sample",
+          "principal_slug": "sample-principal",
+          "relationship": "direct_target",
+          "monitoring_scope": "active",
+          "scope_notes": "Sanitized sample only."
+        }
+      ],
+      "identity": {
+        "display_name": "Sample Actor",
+        "known_aliases": ["sample_actor"],
+        "description": "Sanitized test actor used for schema validation.",
+        "identity_confidence": "moderate",
+        "identity_notes": "No real person represented."
+      },
+      "accounts": [
+        {
+          "platform": "x",
+          "handle": "sample_actor",
+          "url": "https://x.com/sample_actor",
+          "account_status": "active",
+          "confidence": "high",
+          "first_seen_at": "2026-10-07T00:00:00Z",
+          "last_seen_at": "2026-10-07T00:00:00Z",
+          "notes": "Sanitized sample account."
+        }
+      ],
+      "monitoring": {
+        "enabled": true,
+        "priority": "normal",
+        "cadence": "daily",
+        "sources": ["bird:x"],
+        "queries": [
+          {
+            "query_id": "timeline",
+            "platform": "x",
+            "query": "from:sample_actor since:2026-10-01",
+            "purpose": "actor_timeline",
+            "enabled": true,
+            "since_days": 7,
+            "notes": "Actor timeline pull."
+          },
+          {
+            "query_id": "principal_mentions",
+            "platform": "x",
+            "query": "from:sample_actor (\"Sample Principal\" OR sampleprincipal) since:2026-10-01",
+            "purpose": "principal_mentions",
+            "enabled": true,
+            "since_days": 7,
+            "notes": "Principal-nexus query."
+          }
+        ],
+        "principal_terms": ["Sample Principal", "sampleprincipal"],
+        "risk_terms": ["address", "outside", "see you soon", "kill", "hurt", "find"],
+        "excluded_terms": []
+      },
+      "assessment": {
+        "aegis_highest_level": 2,
+        "ep_tier": 2,
+        "client_level": "LOW",
+        "confidence": "MODERATE",
+        "domains": {
+          "motivation_grievance": { "score": 1, "confidence": "LOW", "rationale": "Sanitized sample; no real evidence.", "evidence_ids": [] },
+          "fixation": { "score": 2, "confidence": "MODERATE", "rationale": "Sample repeated attention pattern.", "evidence_ids": [] },
+          "threat_leakage": { "score": 0, "confidence": "MODERATE", "rationale": "No leakage observed in sample.", "evidence_ids": [] },
+          "research_planning": { "score": 0, "confidence": "MODERATE", "rationale": "No research/planning observed in sample.", "evidence_ids": [] },
+          "approach_proximity": { "score": 0, "confidence": "MODERATE", "rationale": "No approach/proximity observed in sample.", "evidence_ids": [] },
+          "capability": { "score": 0, "confidence": "LOW", "rationale": "Unknown in sample.", "evidence_ids": [] },
+          "destabilizers": { "score": 0, "confidence": "LOW", "rationale": "Unknown in sample.", "evidence_ids": [] },
+          "persistence": { "score": 1, "confidence": "MODERATE", "rationale": "Sample persistence only.", "evidence_ids": [] }
+        },
+        "trajectory": {
+          "pathway_stage": "fixation",
+          "leakage": "none",
+          "online_to_offline_bridge": "none",
+          "actor_velocity": "stable"
+        },
+        "auto_escalation_triggers": [],
+        "summary": "Sanitized low-level sample monitoring record.",
+        "rationale": "Used to validate schema and Bird integration path.",
+        "uncertainties": ["No real actor data in sample."]
+      },
+      "observed_activity": {
+        "first_observed_at": "2026-10-07T00:00:00Z",
+        "last_observed_at": "2026-10-07T00:00:00Z",
+        "observation_count": 0,
+        "principal_mention_count_30d": 0,
+        "posts_last_24h": 0,
+        "posts_last_7d": 0,
+        "posts_last_30d": 0,
+        "baseline_daily_rate": 0,
+        "cadence_deviation": 0,
+        "last_evidence_ids": []
+      },
+      "evidence_refs": [],
+      "review": {
+        "owner": "analyst",
+        "review_status": "needs_review",
+        "next_review_due_at": "2026-10-14T00:00:00Z",
+        "review_notes": "Sample only.",
+        "recommended_action": "monitor"
+      },
+      "governance": {
+        "data_classification": "internal",
+        "collection_basis": "public_source",
+        "source_access": "authenticated_public",
+        "engagement_policy": "no_engagement",
+        "retention_policy": "sample_delete_anytime",
+        "assertion_category": "ANALYST_ASSESSMENT",
+        "sensitive_data_notes": "No real sensitive data."
+      },
+      "audit": [
+        {
+          "timestamp": "2026-10-07T00:00:00Z",
+          "actor": "dalton",
+          "action": "create_sample",
+          "summary": "Created sanitized sample POI monitoring record."
+        }
+      ]
+    }
+  ]
+}
