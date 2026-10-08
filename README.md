@@ -7,6 +7,16 @@
 This project uses X/Twitter’s **undocumented** web GraphQL API (and cookie auth). X can change endpoints, query IDs,
 and anti-bot behavior at any time — **expect this to break without notice**.
 
+## AEGIS / protective-intelligence POI workflows
+
+This fork includes an AEGIS POI monitoring bridge for training agents that use Bird as a read-only X/Twitter collector.
+
+- Guide: [`docs/aegis-poi-monitoring.md`](docs/aegis-poi-monitoring.md)
+- Sample registry: [`examples/aegis-poi-registry.sample.json`](examples/aegis-poi-registry.sample.json)
+- Agent prompt: [`examples/aegis-bird-poi-agent-prompt.md`](examples/aegis-bird-poi-agent-prompt.md)
+
+These workflows are designed for defensive monitoring and evidence preservation. They should not engage with POIs.
+
 ## Install
 
 ```bash
